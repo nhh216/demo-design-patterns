@@ -1,10 +1,11 @@
-import { IUserEKYCRepository } from '@module/user-ekyc/user-ekyc.repository';
-import { UserEKYCModel } from '@module/user-ekyc/user-ekyc.model';
-import { EKYCFormData, EKYCStatus } from '@module/user-ekyc/user-ekyc.type';
-import { applyObserverPattern } from '@module/user-ekyc/observer/user-ekyc-update-status.subject';
-import { UserModel } from '@module/user-ekyc/user-ekyc.dto';
-import { validatorTemplate } from '@module/user-ekyc/template/user-ekyc-store-form.validate';
-import { storeFormWith3rdApiStrategyMap } from '@module/user-ekyc/strategy/user-ekyc-update-status-execute.strategy';
+import { updateStatusObserver } from '../observer/user-ekyc-update-status.subject';
+import { validatorTemplateFactory } from '../template/user-ekyc-store-form.validate';
+import { UserModel } from '../user-ekyc.dto';
+import { UserEKYCModel } from '../user-ekyc.model';
+import { IUserEKYCRepository } from '../user-ekyc.repository';
+import { EKYCFormData, EKYCStatus } from '../user-ekyc.type';
+
+import { storeStrategyFactory } from '../strategy/user-ekyc-store-data.strategy';
 
 export abstract class IStoreUserEKYCUseCase {
   protected userEKYCRepository: IUserEKYCRepository;
@@ -26,17 +27,17 @@ export abstract class IStoreUserEKYCUseCase {
    * @private
    */
   protected async afterCommitted(userId: number, status: EKYCStatus): Promise<void> {
-    applyObserverPattern(userId, status);
+    updateStatusObserver(userId, status);
   }
 
   protected async getLatestEKYCByUserId(id: number): Promise<UserEKYCModel> {
     return this.userEKYCRepository.findById(id);
   }
-
 }
 
 export class StoreWith3rdApi extends IStoreUserEKYCUseCase {
   constructor(userEKYCRepository: IUserEKYCRepository) {
+    console.log('1. Init class use-case store EKYC to database and verify by 3rd party API');
     super(userEKYCRepository);
   }
 
@@ -50,36 +51,38 @@ export class StoreWith3rdApi extends IStoreUserEKYCUseCase {
     /**
      * Apply template method to validate form
      */
-    const validator = validatorTemplate[payload.status];
+    const validator = validatorTemplateFactory[payload.status];
     if (!validator) {
       throw new Error('Error');
     }
+    console.log('2. Template method validate form - StoreFormValidateTemplateAbs');
     validator.doValidate(user, latestForm, payload);
 
-    const strategy = storeFormWith3rdApiStrategyMap[payload.status];
-    if (strategy) {
+    /**
+     * Apply strategy pattern to store form
+     */
+    console.log('3. Select strategy to store by status obj factory');
+    const strategy = storeStrategyFactory[payload.status];
+    if (!strategy) {
       throw new Error();
     }
     const userEKYC = await strategy.execute(userId, payload);
-    /**
-     * Persistence data to DB
-     */
 
-      // start transaction
+    // start transaction
     const tx = {};
     try {
       const currentEntity = await this.userEKYCRepository.save(userEKYC);
       // commit transaction
       /**
-       * apply observer pattern save audit logs
-       *  and push notification after transaction committed
+       * Apply observer pattern save audit logs
+       * and push notification after transaction committed
        */
-      await this.afterCommitted(userId, payload.status);
-
+      console.log('4. After committed - Update subject state for observer listen');
+      await this.afterCommitted(userId, userEKYC.status);
       return currentEntity;
     } catch (e) {
       // throw exception and handle error
+      throw e;
     }
   }
-
 }

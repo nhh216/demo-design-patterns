@@ -1,4 +1,4 @@
-import { ServerApplication } from '@/app';
+import { ServerApplication } from './app';
 
 (async (): Promise<void> => {
   await runApplication();

@@ -1,4 +1,5 @@
 import express from 'express';
+
 import { userEKYCRouter } from './module/user-ekyc/user-ekyc.router';
 
 export class ServerApplication {
@@ -6,8 +7,8 @@ export class ServerApplication {
 
   public async run() {
     // create and setup express app
-    const app = express()
-    app.use(express.json())
+    const app = express();
+    app.use(express.json());
 
     // init data source connect to DB
     await this.initDatabaseConnection();
@@ -20,10 +21,11 @@ export class ServerApplication {
 
     // start express server
     app.listen(this.port, () => {
-      console.log( `EKYC Service Started on ${Date()}, Port ${this.port}`)})
+      console.log(`EKYC Service Started on ${Date()}, Port ${this.port}`);
+    });
   }
 
   async initDatabaseConnection() {
-    console.info("Data Source initialization successfully!")
+    console.info('Data Source initialization successfully!');
   }
 }

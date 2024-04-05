@@ -1,24 +1,17 @@
-import { UserModel } from '@module/user-ekyc/user-ekyc.dto';
-import { validatorTemplate } from '@module/user-ekyc/template/user-ekyc-store-form.validate';
-import { storeFormWith3rdApiStrategyMap } from '@module/user-ekyc/strategy/user-ekyc-update-status-execute.strategy';
-import { IUserEKYCRepository } from '@module/user-ekyc/user-ekyc.repository';
-import {
-  applyObserverPattern,
-  EKYCStatusSubject,
-  IEKYCStatusSubject,
-} from '@module/user-ekyc/observer/user-ekyc-update-status.subject';
-import {
-  AggregateUserEKYCVerifiedObserver,
-  UpdateEKYCStatusPushNotificationObserver,
-  UpdateEKYCStatusSendAuditLogObserver,
-} from '@module/user-ekyc/observer/user-ekyc-update-status.observer';
-import { EKYCStatus } from '@module/user-ekyc/user-ekyc.type';
+import { storeDataObserver } from '../observer/user-ekyc-update-status.subject';
+import { validatorTemplateFactory } from '../template/user-ekyc-store-form.validate';
+import { UserModel } from '../user-ekyc.dto';
+import { UserEKYCModel } from '../user-ekyc.model';
+import { IUserEKYCRepository } from '../user-ekyc.repository';
+import { EKYCStatus } from '../user-ekyc.type';
+
+import { storeStrategyFactory } from '../strategy/user-ekyc-store-data.strategy';
 
 /**
  * The Command interface declares a method for executing a command.
  */
 interface Command {
-  execute(): void;
+  execute(): void | Promise<void | UserEKYCModel>;
 }
 
 /**
@@ -39,7 +32,8 @@ export class ValidateCommand implements Command {
     /**
      * Apply template method to validate form
      */
-    const validator = validatorTemplate[this.payload.status];
+    console.log('2.1.1 ---- Select strategy for validate form data');
+    const validator = validatorTemplateFactory[this.payload.status];
     if (!validator) {
       throw new Error('Error');
     }
@@ -56,14 +50,15 @@ export class StoreCommand implements Command {
     this.userId = userId;
     this.payload = payload;
     this.userEKYCRepository = userEKYCRepository;
-
   }
+
   /**
    * Commands can delegate to any methods of a receiver.
    */
-  public async execute(): Promise<void> {
-    const strategy = storeFormWith3rdApiStrategyMap[this.payload.status];
-    if (strategy) {
+  public async execute(): Promise<UserEKYCModel> {
+    console.log('2.2.1 ---- Select strategy to store data');
+    const strategy = storeStrategyFactory[this.payload.status];
+    if (!strategy) {
       throw new Error();
     }
     const userEKYC = await strategy.execute(this.userId, this.payload);
@@ -71,9 +66,9 @@ export class StoreCommand implements Command {
     // start transaction
     const tx = {};
     try {
-      const currentEntity  = await this.userEKYCRepository.save(userEKYC);
-      // commit transaction
       console.log('Transaction committed');
+      return await this.userEKYCRepository.save(userEKYC);
+      // commit transaction
     } catch (e) {
       // throw exception and handle error
       console.log('Transaction rollback');
@@ -89,16 +84,20 @@ export class CommittedCommand implements Command {
     this.userId = userId;
     this.status = status;
   }
+
   public async execute(): Promise<void> {
-    applyObserverPattern(this.userId, this.status)
+    storeDataObserver(this.userId, this.status);
   }
 }
-
 
 export class Invoker {
   private onValidate: Command;
   private onStore: Command;
   private onCommitted: Command;
+
+  constructor() {
+    console.log('2. Init Invoker class for implement command pattern');
+  }
   /**
    * Initialize commands.
    */
@@ -114,20 +113,19 @@ export class Invoker {
     this.onCommitted = command;
   }
 
-  public async doStoreEKYCFormManually(): Promise<void> {
-    console.log('Invoker: Does anybody want something done before I begin?');
+  public async doStoreEKYCFormManually(): Promise<void | UserEKYCModel> {
+    console.log('2.1 - Invoker: Do validate EKYC form');
     if (this.isCommand(this.onValidate)) {
-     await this.onValidate.execute();
+      await this.onValidate.execute();
     }
-    console.log('Invoker: ...doing something really important...');
+    console.log('2.2 - Invoker: Store from to DB');
     if (this.isCommand(this.onStore)) {
-     await this.onStore.execute();
+      await this.onStore.execute();
     }
-    console.log('Invoker: ...doing something really important...');
 
-    console.log('Invoker: Does anybody want something done after I finish?');
+    console.log('2.3 - Invoker: Update Subject state for Observer listen');
     if (this.isCommand(this.onCommitted)) {
-      await this.onCommitted.execute();
+      return this.onCommitted.execute();
     }
   }
 

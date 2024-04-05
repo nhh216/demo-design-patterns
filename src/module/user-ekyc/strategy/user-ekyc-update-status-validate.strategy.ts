@@ -1,19 +1,15 @@
-import { EKYCStatus } from '@module/user-ekyc/user-ekyc.type';
-import { UserEKYCChangeStatusValidator } from '@module/user-ekyc/singleton/user-ekyc-change-status.validator';
+import { EKYCStatus } from '../user-ekyc.type';
+import { UserEKYCChangeStatusValidator } from '../singleton/user-ekyc-change-status.validator';
 
-export interface IValidateEKYCStatusStrategy {
-  validate(status: EKYCStatus): Promise<any>;
+export abstract class IValidateEKYCStatusStrategy {
+  abstract validate(status: EKYCStatus): Promise<any>;
 }
 
-export class ValidateStatusContext {
+export class ValidateStrategyContext {
 
   private strategy: IValidateEKYCStatusStrategy;
 
   constructor(strategy: IValidateEKYCStatusStrategy) {
-    this.strategy = strategy;
-  }
-
-  public setStrategy(strategy: IValidateEKYCStatusStrategy) {
     this.strategy = strategy;
   }
 
@@ -22,61 +18,59 @@ export class ValidateStatusContext {
   }
 }
 
-export class FormStatusIsDraft implements IValidateEKYCStatusStrategy {
+export class StatusIsDraft extends IValidateEKYCStatusStrategy {
   public async validate(newStatus: EKYCStatus): Promise<any> {
-    const validator = UserEKYCChangeStatusValidator.getInstance();
-    validator.updateFromDraft(newStatus);
+    const allowToUpdate = [EKYCStatus.SUBMITTED];
+    if (!allowToUpdate.includes(newStatus)) {
+      throw new Error(`Status cannot update from draft to ${newStatus}`);
+    }
   }
 }
 
-export class FormStatusIsSummited implements IValidateEKYCStatusStrategy {
+export class StatusIsSummited extends IValidateEKYCStatusStrategy {
   public async validate(newStatus: EKYCStatus): Promise<any> {
-    const validator = UserEKYCChangeStatusValidator.getInstance();
-    validator.updateFromSubmittedWith3rdApi(newStatus);
+    const allowToUpdate = [EKYCStatus.VERIFIED, EKYCStatus.PENDING];
+    if (!allowToUpdate.includes(newStatus)) {
+      throw new Error(`Status cannot update from submitted to ${newStatus}`);
+    }
   }
 }
 
-export class FormStatusIsPending implements IValidateEKYCStatusStrategy {
+export class StatusIsSummitedByManually extends IValidateEKYCStatusStrategy {
   public async validate(newStatus: EKYCStatus): Promise<any> {
-    const validator = UserEKYCChangeStatusValidator.getInstance();
-    validator.updateFromPending(newStatus);
+    const allowToUpdate = [EKYCStatus.VERIFIED, EKYCStatus.REJECTED];
+    if (!allowToUpdate.includes(newStatus)) {
+      throw new Error(`Status cannot update from submitted to ${newStatus}`);
+    }
   }
 }
 
-export class FormStatusIsFailed implements IValidateEKYCStatusStrategy {
+export class StatusIsPending extends IValidateEKYCStatusStrategy {
   public async validate(newStatus: EKYCStatus): Promise<any> {
-    const validator = UserEKYCChangeStatusValidator.getInstance();
-    validator.updateFromFailed(newStatus);
+    const allowToUpdate = [EKYCStatus.FAILED, EKYCStatus.VERIFIED];
+    if (!allowToUpdate.includes(newStatus)) {
+      throw new Error(`Status cannot update from pending to ${newStatus}`);
+    }
   }
 }
 
-export class FormStatusIsRejected implements IValidateEKYCStatusStrategy {
+export class StatusIsFailed extends IValidateEKYCStatusStrategy {
   public async validate(newStatus: EKYCStatus): Promise<any> {
-    const validator = UserEKYCChangeStatusValidator.getInstance();
-    validator.updateFromRejected();
+    const allowToUpdate = [EKYCStatus.REJECTED, EKYCStatus.VERIFIED];
+    if (!allowToUpdate.includes(newStatus)) {
+      throw new Error(`Status cannot update from failed to ${newStatus}`);
+    }
   }
 }
 
-export class FormStatusIsVerified implements IValidateEKYCStatusStrategy {
+export class StatusIsRejected extends IValidateEKYCStatusStrategy {
   public async validate(newStatus: EKYCStatus): Promise<any> {
-    const validator = UserEKYCChangeStatusValidator.getInstance();
-    validator.updateFromVerified();
+    throw new Error(`Status is ${EKYCStatus.REJECTED} cannot update status`);
   }
 }
 
-export class FormStatusIsCanceled implements IValidateEKYCStatusStrategy {
+export class StatusIsVerified extends IValidateEKYCStatusStrategy {
   public async validate(newStatus: EKYCStatus): Promise<any> {
-    const validator = UserEKYCChangeStatusValidator.getInstance();
-    validator.updateFromCanceled();
+    throw new Error(`Status is ${EKYCStatus.VERIFIED} cannot update status`);
   }
-}
-
-export const validatorStrategyMap = {
-  [EKYCStatus.DRAFT]: new FormStatusIsDraft(),
-  [EKYCStatus.SUBMITTED]: new FormStatusIsSummited(),
-  [EKYCStatus.PENDING]: new FormStatusIsPending(),
-  [EKYCStatus.FAILED]: new FormStatusIsFailed(),
-  [EKYCStatus.REJECTED]: new FormStatusIsRejected(),
-  [EKYCStatus.VERIFIED]: new FormStatusIsVerified(),
-  [EKYCStatus.CANCELED]: new FormStatusIsCanceled()
 }

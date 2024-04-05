@@ -28,14 +28,7 @@
     ],
     "alwaysStrict": true,
     "strict": true,
-    "paths": {
-      "@module/*": [
-        "src/module/*"
-      ],
-      "@/*": [
-        "src/*"
-      ]
-    }
+    "paths": {}
   },
   "include": [
     "src/**/*.ts"

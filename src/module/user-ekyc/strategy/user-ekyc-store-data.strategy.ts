@@ -1,5 +1,5 @@
-import { EKYCFormData, EKYCStatus } from '@module/user-ekyc/user-ekyc.type';
-import { UserEKYCModel } from '@module/user-ekyc/user-ekyc.model';
+import { EKYCFormData, EKYCStatus } from '../user-ekyc.type';
+import { UserEKYCModel } from '../user-ekyc.model';
 
 export abstract class IExecuteStoreFormStrategy {
   protected async executeEKYCData(userId: number, payload: EKYCFormData): Promise<UserEKYCModel> {
@@ -9,6 +9,7 @@ export abstract class IExecuteStoreFormStrategy {
     /**
      * Upload image to storage
      */
+    console.log('Upload image to storage...... - IExecuteStoreFormStrategy');
     const uploadImage = 'URL string';
     const uploadImage2 = 'URL string';
     const uploadImage3 = 'URL string';
@@ -20,6 +21,7 @@ export abstract class IExecuteStoreFormStrategy {
     userEKYC.form = JSON.stringify(payload);
     return userEKYC;
   }
+
   abstract execute(userId: number, payload: EKYCFormData): Promise<UserEKYCModel>;
 }
 
@@ -29,7 +31,7 @@ export class StoreDraftFormStrategy extends IExecuteStoreFormStrategy {
   }
 }
 
-export class StoreSummitedFormWith3rdApiStrategy extends IExecuteStoreFormStrategy {
+export class SummitFormWith3rdApiStrategy extends IExecuteStoreFormStrategy {
   public async execute(userId: number, payload: EKYCFormData): Promise<UserEKYCModel> {
     const userEKYC = await this.executeEKYCData(userId, payload);
     /**
@@ -38,7 +40,13 @@ export class StoreSummitedFormWith3rdApiStrategy extends IExecuteStoreFormStrate
      * Response from EKYC provider
      * Can apply Template Method
      */
-    const result: any = {};
+    console.log('Send verification request to 3rd party API...... - SummitFormWith3rdApiStrategy');
+    const result: any = {
+      data: {
+        status: 'success',
+        rate: 0.97,
+      },
+    };
 
     /**
      * Default status = FAILED for request failed or  rate < 0.95
@@ -56,6 +64,7 @@ export class StoreSummitedFormWith3rdApiStrategy extends IExecuteStoreFormStrate
     });
     if (result.data.rate > 0.95) {
       userEKYC.status = EKYCStatus.VERIFIED;
+      console.log(`Update status to ${EKYCStatus.VERIFIED}........ - SummitFormWith3rdApiStrategy`);
     }
     return userEKYC;
   }
@@ -67,13 +76,13 @@ export class StoreSummitedFormManuallyStrategy extends IExecuteStoreFormStrategy
   }
 }
 
-export const storeFormWith3rdApiStrategyMap = {
+export const storeStrategyFactory = {
   [EKYCStatus.DRAFT]: new StoreDraftFormStrategy(),
-  [EKYCStatus.SUBMITTED]: new StoreSummitedFormWith3rdApiStrategy(),
-}
+  [EKYCStatus.SUBMITTED]: new SummitFormWith3rdApiStrategy(),
+};
 
 
-export const storeFormManuallyStrategyMap = {
+export const storeStrategyFactoryManually = {
   [EKYCStatus.DRAFT]: new StoreDraftFormStrategy(),
   [EKYCStatus.SUBMITTED]: new StoreSummitedFormManuallyStrategy(),
-}
+};

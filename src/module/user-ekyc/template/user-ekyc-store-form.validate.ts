@@ -1,28 +1,26 @@
-import { EKYCFormData, EKYCStatus } from '@module/user-ekyc/user-ekyc.type';
-import { UserModel } from '@module/user-ekyc/user-ekyc.dto';
-import { UserEKYCModel } from '@module/user-ekyc/user-ekyc.model';
+import { EKYCFormData, EKYCStatus } from '../user-ekyc.type';
+import { UserModel } from '../user-ekyc.dto';
+import { UserEKYCModel } from '../user-ekyc.model';
 
 export abstract class StoreFormValidateTemplateAbs {
   /**
    * The template method defines the skeleton of an algorithm.
    */
   public doValidate(user: UserModel, latestForm: UserEKYCModel, payload: EKYCFormData): void {
-    this.formStatusValidate(payload);
+    this.formStatusValidate(payload.status);
     this.formDataValidate(payload);
     this.userIsVerified(user);
     this.validateExistedEKYCData(latestForm);
   }
 
-  protected formStatusValidate(payload: EKYCFormData): void {
+  protected formStatusValidate(status: EKYCStatus): void {
     const allowToUpdate = [EKYCStatus.SUBMITTED, EKYCStatus.DRAFT];
-    if (!allowToUpdate.includes(payload.status)) {
+    if (!allowToUpdate.includes(status)) {
       throw new Error(`Status form fro store invalid`);
     }
   };
 
-  protected formDataValidate(payload: EKYCFormData): void {
-    console.log('Status is draft no need validate anything');
-  };
+  protected formDataValidate(payload: EKYCFormData): void {};
 
   protected userIsVerified(user: UserModel): void {
     if (user.isVerified) {
@@ -31,7 +29,7 @@ export abstract class StoreFormValidateTemplateAbs {
   }
 
   protected validateExistedEKYCData(latestForm: UserEKYCModel): void {
-    if (latestForm.status === EKYCStatus.DRAFT || latestForm.status === EKYCStatus.SUBMITTED) {
+    if (latestForm && (latestForm.status === EKYCStatus.DRAFT || latestForm.status === EKYCStatus.SUBMITTED)) {
       throw new Error('Form existed wait for processing');
     }
   };
@@ -39,6 +37,9 @@ export abstract class StoreFormValidateTemplateAbs {
 
 
 export class SaveDraftFormValidator extends StoreFormValidateTemplateAbs {
+  protected formDataValidate(payload: EKYCFormData): void {
+    console.log('Status is draft no need validate anything');
+  };
 }
 
 export class SubmitFormValidator extends StoreFormValidateTemplateAbs {
@@ -74,7 +75,7 @@ export class SubmitFormValidator extends StoreFormValidateTemplateAbs {
 
 }
 
-export const validatorTemplate = {
+export const validatorTemplateFactory = {
   [EKYCStatus.DRAFT]: new SaveDraftFormValidator(),
   [EKYCStatus.SUBMITTED]: new SubmitFormValidator(),
 }

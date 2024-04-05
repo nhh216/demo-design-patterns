@@ -6,7 +6,6 @@ export enum EKYCStatus {
   FAILED = 'verify_failed',
   VERIFIED = 'verified',
   REJECTED = 'rejected',
-  CANCELED = 'canceled'
 }
 
 export type EKYCFormData = {

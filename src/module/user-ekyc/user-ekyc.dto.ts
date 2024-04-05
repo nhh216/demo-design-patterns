@@ -1,4 +1,4 @@
-import { EKYCStatus } from '@module/user-ekyc/user-ekyc.type';
+import { EKYCStatus } from './user-ekyc.type';
 
 export class UserEKYCUpdateStatusDto {
   formId: number;

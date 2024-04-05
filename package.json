@@ -5,7 +5,8 @@
   "license": "MIT",
   "scripts": {
     "tsc": "tsc --project tsconfig.build.json",
-    "dev": "tsc --watch & NODE_ENV=development nodemon dist"
+    "dev": "tsc --watch & NODE_ENV=development nodemon dist",
+    "start": "node dist/main.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

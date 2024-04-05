@@ -1,18 +1,25 @@
-import { EKYCFormData, EKYCStatus } from '@module/user-ekyc/user-ekyc.type';
+import { EKYCStatus } from '../user-ekyc.type';
 
 export class UserEKYCChangeStatusValidator {
   private static instance: UserEKYCChangeStatusValidator;
-  public validateStatusMapFunction = {
-    [EKYCStatus.DRAFT]: this.updateFromDraft,
-    [EKYCStatus.SUBMITTED]: this.updateFromSubmittedWith3rdApi,
-    [EKYCStatus.PENDING]: this.updateFromPending,
-    [EKYCStatus.FAILED]: this.updateFromFailed,
-    [EKYCStatus.REJECTED]: this.updateFromRejected,
-    [EKYCStatus.VERIFIED]: this.updateFromVerified,
-    [EKYCStatus.CANCELED]: this.updateFromCanceled,
-  }
+  // Use factory instead
+  // public validatorStatusMap = {
+  //   [EKYCStatus.DRAFT]: this.updateFromDraft,
+  //   [EKYCStatus.SUBMITTED]: this.updateFromSubmittedWith3rdApi,
+  //   [EKYCStatus.PENDING]: this.updateFromPending,
+  //   [EKYCStatus.FAILED]: this.updateFromFailed,
+  //   [EKYCStatus.REJECTED]: this.updateFromRejected,
+  //   [EKYCStatus.VERIFIED]: this.updateFromVerified,
+  // }
+  // public validatorStatusMapForManually = {
+  //   ...this.validatorStatusMap,
+  //   [EKYCStatus.SUBMITTED]: this.updateFromSubmittedWithout3rdApi,
+  // }
   constructor() {}
 
+  /**
+   * Singleton pattern
+   */
   public static getInstance(): UserEKYCChangeStatusValidator {
     if (!UserEKYCChangeStatusValidator.instance) {
       UserEKYCChangeStatusValidator.instance = new UserEKYCChangeStatusValidator();
@@ -20,50 +27,46 @@ export class UserEKYCChangeStatusValidator {
     return UserEKYCChangeStatusValidator.instance;
   }
 
-  public updateFromDraft(status: EKYCStatus): void {
-    const allowToUpdate = [EKYCStatus.SUBMITTED, EKYCStatus.CANCELED];
-    if (!allowToUpdate.includes(status)) {
-      throw new Error(`Status cannot update from draft to ${status}`);
+  public statusIsDraft(to: EKYCStatus): void {
+    const allowToUpdate = [EKYCStatus.SUBMITTED];
+    if (!allowToUpdate.includes(to)) {
+      throw new Error(`Status cannot update from draft to ${to}`);
     }
   }
 
-  public updateFromSubmittedWithout3rdApi(status: EKYCStatus): void {
-    const allowToUpdate = [EKYCStatus.VERIFIED, EKYCStatus.VERIFIED, EKYCStatus.CANCELED];
-    if (!allowToUpdate.includes(status)) {
-      throw new Error(`Status cannot update from submitted to ${status}`);
+  public statusIsSubmittedWithout3rdApi(to: EKYCStatus): void {
+    const allowToUpdate = [EKYCStatus.VERIFIED, EKYCStatus.REJECTED];
+    if (!allowToUpdate.includes(to)) {
+      throw new Error(`Status cannot update from submitted to ${to}`);
     }
   }
 
-  public updateFromSubmittedWith3rdApi(status: EKYCStatus): void {
-    const allowToUpdate = [EKYCStatus.VERIFIED, EKYCStatus.PENDING, EKYCStatus.CANCELED];
-    if (!allowToUpdate.includes(status)) {
-      throw new Error(`Status cannot update from submitted to ${status}`);
+  public statusIsSubmittedWith3rdApi(to: EKYCStatus): void {
+    const allowToUpdate = [EKYCStatus.VERIFIED, EKYCStatus.PENDING];
+    if (!allowToUpdate.includes(to)) {
+      throw new Error(`Status cannot update from submitted to ${to}`);
     }
   }
 
-  public updateFromPending(status: EKYCStatus): void {
+  public statusIdPending(to: EKYCStatus): void {
     const allowToUpdate = [EKYCStatus.FAILED, EKYCStatus.VERIFIED];
-    if (!allowToUpdate.includes(status)) {
-      throw new Error(`Status cannot update from pending to ${status}`);
+    if (!allowToUpdate.includes(to)) {
+      throw new Error(`Status cannot update from pending to ${to}`);
     }
   }
 
-  public updateFromFailed(status: EKYCStatus): void {
+  public statusIsFailed(to: EKYCStatus): void {
     const allowToUpdate = [EKYCStatus.REJECTED, EKYCStatus.VERIFIED];
-    if (!allowToUpdate.includes(status)) {
-      throw new Error(`Status cannot update from failed to ${status}`);
+    if (!allowToUpdate.includes(to)) {
+      throw new Error(`Status cannot update from failed to ${to}`);
     }
   }
 
-  public updateFromRejected(): void {
+  public statusIsRejected(): void {
       throw new Error(`Status is ${EKYCStatus.REJECTED} cannot update status`);
   }
 
-  public updateFromVerified(): void {
+  public statusIsVerified(): void {
     throw new Error(`Status is ${EKYCStatus.VERIFIED} cannot update status`);
-  }
-
-  public updateFromCanceled(): void {
-    throw new Error(`Status is ${EKYCStatus.CANCELED} cannot update status`);
   }
 }
