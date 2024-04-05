@@ -1,0 +1,16 @@
+[
+  "user-ekyc/StoreFormController",
+  "user-ekyc/UserEKYCRepositoryImpl",
+  "user-ekyc/observer/AggregateUserVerifiedObserver",
+  "user-ekyc/observer/PushNotificationObserver",
+  "user-ekyc/observer/SendAuditLogObserver",
+  "user-ekyc/observer/UpdateStatusSubject",
+  "user-ekyc/observer/user-ekyc-update-status.subject",
+  "user-ekyc/strategy/IExecuteStoreFormStrategy",
+  "user-ekyc/strategy/SummitFormWith3rdApiStrategy",
+  "user-ekyc/template/StoreFormValidateTemplateAbs",
+  "user-ekyc/template/SubmitFormValidator",
+  "user-ekyc/use-case/IStoreUserEKYCUseCase",
+  "user-ekyc/use-case/StoreWith3rdApi",
+  "user-ekyc/user-ekyc.router"
+]

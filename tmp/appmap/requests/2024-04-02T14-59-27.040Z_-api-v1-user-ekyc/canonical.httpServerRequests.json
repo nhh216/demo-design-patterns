@@ -1,0 +1,7 @@
+[
+  {
+    "route": "POST /",
+    "parameters": "(fullName,birthDate,address,identityNumber,identityFrontImage,identityBackImage,selfieImage,status)",
+    "status": 200
+  }
+]

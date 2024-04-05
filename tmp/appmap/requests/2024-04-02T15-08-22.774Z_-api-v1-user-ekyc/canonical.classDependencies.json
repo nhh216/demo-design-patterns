@@ -1,0 +1,42 @@
+[
+  {
+    "caller": "POST /",
+    "callee": "user-ekyc/UserEKYCRepositoryImpl"
+  },
+  {
+    "caller": "POST /",
+    "callee": "user-ekyc/command"
+  },
+  {
+    "caller": "POST /",
+    "callee": "user-ekyc/user-ekyc.router"
+  },
+  {
+    "caller": "user-ekyc/StoreFormController",
+    "callee": "user-ekyc/use-case"
+  },
+  {
+    "caller": "user-ekyc/command",
+    "callee": "user-ekyc/observer"
+  },
+  {
+    "caller": "user-ekyc/command",
+    "callee": "user-ekyc/strategy"
+  },
+  {
+    "caller": "user-ekyc/command",
+    "callee": "user-ekyc/template"
+  },
+  {
+    "caller": "user-ekyc/use-case",
+    "callee": "user-ekyc/UserEKYCRepositoryImpl"
+  },
+  {
+    "caller": "user-ekyc/user-ekyc.router",
+    "callee": "user-ekyc/StoreFormController"
+  },
+  {
+    "caller": "user-ekyc/user-ekyc.router",
+    "callee": "user-ekyc/use-case"
+  }
+]
