@@ -1,4 +1,4 @@
-import { IStoreUserEKYCUseCase } from './use-case/store-user-ekyc-with-3rd-api.use-case';
+import { IStoreEKYCUseCase } from './use-case/store-user-ekyc.use-case';
 import { IUpdateUserEKYCUseCase } from './use-case/update-status-use.case';
 import { UserEKYCUpdateStatusDto } from './user-ekyc.dto';
 import { EKYCFormData } from './user-ekyc.type';
@@ -16,9 +16,9 @@ export class UpdateStatusController {
 }
 
 export class StoreFormController {
-  private userEKYCService: IStoreUserEKYCUseCase;
+  private userEKYCService: IStoreEKYCUseCase;
 
-  constructor(userEKYCService: IStoreUserEKYCUseCase) {
+  constructor(userEKYCService: IStoreEKYCUseCase) {
     this.userEKYCService = userEKYCService;
   }
 

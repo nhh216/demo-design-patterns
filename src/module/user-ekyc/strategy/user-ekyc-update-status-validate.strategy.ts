@@ -1,6 +1,10 @@
 import { EKYCStatus } from '../user-ekyc.type';
-import { UserEKYCChangeStatusValidator } from '../singleton/user-ekyc-change-status.validator';
 
+/**
+ * ----- Strategy pattern
+ * Strategy is a behavioral design pattern that lets you define a family of algorithms or logic,
+ * put each of them into a separate class, and make them interchangeable.
+ */
 export abstract class IValidateEKYCStatusStrategy {
   abstract validate(status: EKYCStatus): Promise<any>;
 }

@@ -6,8 +6,9 @@ import { IUserEKYCRepository } from '../user-ekyc.repository';
 import { EKYCFormData, EKYCStatus } from '../user-ekyc.type';
 
 import { storeStrategyFactory } from '../strategy/user-ekyc-store-data.strategy';
+import { CommittedCommand, Invoker, StoreCommand, ValidateCommand } from '../command/user-ekyc-store.command';
 
-export abstract class IStoreUserEKYCUseCase {
+export abstract class IStoreEKYCUseCase {
   protected userEKYCRepository: IUserEKYCRepository;
 
   protected constructor(userEKYCRepository: IUserEKYCRepository) {
@@ -35,9 +36,37 @@ export abstract class IStoreUserEKYCUseCase {
   }
 }
 
-export class StoreWith3rdApi extends IStoreUserEKYCUseCase {
+export class StoreManually extends IStoreEKYCUseCase {
   constructor(userEKYCRepository: IUserEKYCRepository) {
-    console.log('1. Init class use-case store EKYC to database and verify by 3rd party API');
+    console.log("1. Init class StoreManually for eKYC manually")
+    super(userEKYCRepository);
+  }
+
+  /**
+   * Implement store and verify eKYC form manually with
+   * + Command pattern
+   * + Template pattern
+   * + Strategy pattern
+   * + Observer pattern
+   */
+  async store(userId: number, payload: EKYCFormData): Promise<UserEKYCModel> {
+    console.log('----- Store eKYC form to database without 3rd party API');
+    const user = new UserModel();
+    const latestForm = await this.userEKYCRepository.findById(userId);
+    // Init invoker for command pattern
+    const invoker = new Invoker();
+    // Set command for invoker
+    invoker.setOnValidate(new ValidateCommand(user, latestForm, payload));
+    invoker.setOnStore(new StoreCommand(userId, payload, this.userEKYCRepository));
+    invoker.setOnCommitted(new CommittedCommand(userId, payload.status));
+    // Execute command
+    return await invoker.doStoreEKYCFormManually() as UserEKYCModel;
+  }
+}
+
+export class StoreWith3rdApi extends IStoreEKYCUseCase {
+  constructor(userEKYCRepository: IUserEKYCRepository) {
+    console.log('1. Init class StoreWith3rdApi for eKYC with 3rd party API');
     super(userEKYCRepository);
   }
 
@@ -47,7 +76,7 @@ export class StoreWith3rdApi extends IStoreUserEKYCUseCase {
      * Find the latest form by user ID
      */
     const user = new UserModel();
-    const latestForm = await this.getLatestEKYCByUserId(userId);
+    const latestForm = await this.userEKYCRepository.findById(userId);
     /**
      * Apply template method to validate form
      */

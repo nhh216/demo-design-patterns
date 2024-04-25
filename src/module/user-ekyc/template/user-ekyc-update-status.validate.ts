@@ -1,12 +1,9 @@
+import { validatorFactoryForManually } from '../factory/user-ekyc-update-status-validate.factory';
+import { ValidateStrategyContext } from '../strategy/user-ekyc-update-status-validate.strategy';
 import { UserEKYCUpdateStatusDto, UserModel } from '../user-ekyc.dto';
 import { UserEKYCModel } from '../user-ekyc.model';
-import { StoreFormValidateTemplateAbs } from './user-ekyc-store-form.validate';
 import { EKYCStatus } from '../user-ekyc.type';
-import {
-  validatorFactoryForManually,
-  ValidatorStatusFactory,
-} from '../factory/user-ekyc-update-status-validate.factory';
-import { ValidateStrategyContext } from '../strategy/user-ekyc-update-status-validate.strategy';
+import { StoreFormValidateTemplateAbs } from './user-ekyc-store-form.validate';
 
 const status = [
   EKYCStatus.DRAFT,
@@ -18,8 +15,11 @@ const status = [
 ];
 
 export class UpdateStatusValidateTemplate extends StoreFormValidateTemplateAbs {
-
-  public async updateStatusValidate(user: UserModel, payload: UserEKYCUpdateStatusDto, form: UserEKYCModel): Promise<void> {
+  public async updateStatusValidate(
+    user: UserModel,
+    payload: UserEKYCUpdateStatusDto,
+    form: UserEKYCModel,
+  ): Promise<void> {
     this.validatePayload(payload);
     this.userIsVerified(user);
     await this.validateStatus(form, payload);
@@ -37,7 +37,10 @@ export class UpdateStatusValidateTemplate extends StoreFormValidateTemplateAbs {
     }
   }
 
-  protected async validateStatus(form: UserEKYCModel, payload: UserEKYCUpdateStatusDto): Promise<void> {
+  protected async validateStatus(
+    form: UserEKYCModel,
+    payload: UserEKYCUpdateStatusDto,
+  ): Promise<void> {
     const from = form.status;
     const to = payload.status;
     const statusAbleToUpdate = [EKYCStatus.SUBMITTED, EKYCStatus.FAILED];
@@ -45,19 +48,18 @@ export class UpdateStatusValidateTemplate extends StoreFormValidateTemplateAbs {
       throw new Error('Can not update status this form');
     }
     /** The first way
-     * Using factory object select strategy then apply to strategy context do validate
+     * Using simple factory select strategy then apply to strategy context do validate
      */
     const validatorStrategy = validatorFactoryForManually[from];
-    const validateContext = new ValidateStrategyContext(validatorStrategy)
+    const validateContext = new ValidateStrategyContext(validatorStrategy);
     await validateContext.doValidate(to);
 
     /** The second way
      * Using factory class select strategy then apply to strategy context do validate
-    * const validatorFactory = new ValidatorStatusFactory();
-    * const validateStrategy = validatorFactory.createValidator(form.status);
-    * const validateContext2 = new ValidateStrategyContext(validateStrategy)
-    * await validateContext2.doValidate(to);
      */
+    // const validatorFactory = new ValidatorStatusFactory();
+    // const validateStrategy = validatorFactory.createValidator(form.status);
+    // const validateContext2 = new ValidateStrategyContext(validateStrategy)
+    // await validateContext2.doValidate(to);
   }
-
 }

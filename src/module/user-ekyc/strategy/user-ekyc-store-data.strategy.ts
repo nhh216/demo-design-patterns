@@ -1,6 +1,14 @@
 import { EKYCFormData, EKYCStatus } from '../user-ekyc.type';
 import { UserEKYCModel } from '../user-ekyc.model';
 
+/**
+ * ----- Strategy pattern
+ * Strategy is a behavioral design pattern that lets you define a family of algorithms or logic,
+ * Each strategy is a class and perform the same action but in different ways
+ */
+/**
+ * In this bz we will have 2 strategies for store EKYC form with Draft and Submitted status
+ */
 export abstract class IExecuteStoreFormStrategy {
   protected async executeEKYCData(userId: number, payload: EKYCFormData): Promise<UserEKYCModel> {
     const userEKYC = new UserEKYCModel();
@@ -40,7 +48,7 @@ export class SummitFormWith3rdApiStrategy extends IExecuteStoreFormStrategy {
      * Response from EKYC provider
      * Can apply Template Method
      */
-    console.log('Send verification request to 3rd party API...... - SummitFormWith3rdApiStrategy');
+    console.log('----- Send verification request to 3rd party API...... - SummitFormWith3rdApiStrategy');
     const result: any = {
       data: {
         status: 'success',
@@ -64,7 +72,7 @@ export class SummitFormWith3rdApiStrategy extends IExecuteStoreFormStrategy {
     });
     if (result.data.rate > 0.95) {
       userEKYC.status = EKYCStatus.VERIFIED;
-      console.log(`Update status to ${EKYCStatus.VERIFIED}........ - SummitFormWith3rdApiStrategy`);
+      console.log(`----- Update status to ${EKYCStatus.VERIFIED}........ - SummitFormWith3rdApiStrategy`);
     }
     return userEKYC;
   }

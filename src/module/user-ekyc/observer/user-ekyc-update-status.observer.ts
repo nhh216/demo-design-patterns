@@ -1,7 +1,7 @@
 import {
   UpdateStatusSubject,
   IEKYCStatusSubject
-} from '../observer/user-ekyc-update-status.subject';
+} from './user-ekyc-update-status.subject';
 
 /**
  * The Observer interface declares the update method, used by subjects.

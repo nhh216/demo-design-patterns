@@ -1,10 +1,21 @@
-import { EKYCFormData, EKYCStatus } from '../user-ekyc.type';
 import { UserModel } from '../user-ekyc.dto';
 import { UserEKYCModel } from '../user-ekyc.model';
+import { EKYCFormData, EKYCStatus } from '../user-ekyc.type';
 
+/**
+ * ----- Template Method
+ * Template Method is a behavioral design pattern that defines the skeleton of an algorithm, business logic ...
+ * in the superclass but lets subclasses override specific steps of the algorithm without changing its structure.
+ * - Structure of Template Method pattern:
+ *  + Abstract Class declares methods that act as steps
+ *  + Concrete Class implements these steps and can override some steps, but not the template method
+ * In here I defined template for validate form data with 2 case and do validate step by step by order
+ * have defined in parent abstract class.
+ */
 export abstract class StoreFormValidateTemplateAbs {
   /**
-   * The template method defines the skeleton of an algorithm.
+   * Template method - Subclass cannot override this method
+   * The template method defines the skeleton of an algorithm or bz logic.
    */
   public doValidate(user: UserModel, latestForm: UserEKYCModel, payload: EKYCFormData): void {
     this.formStatusValidate(payload.status);
@@ -18,9 +29,9 @@ export abstract class StoreFormValidateTemplateAbs {
     if (!allowToUpdate.includes(status)) {
       throw new Error(`Status form fro store invalid`);
     }
-  };
+  }
 
-  protected formDataValidate(payload: EKYCFormData): void {};
+  protected formDataValidate(payload: EKYCFormData): void {}
 
   protected userIsVerified(user: UserModel): void {
     if (user.isVerified) {
@@ -29,19 +40,23 @@ export abstract class StoreFormValidateTemplateAbs {
   }
 
   protected validateExistedEKYCData(latestForm: UserEKYCModel): void {
-    if (latestForm && (latestForm.status === EKYCStatus.DRAFT || latestForm.status === EKYCStatus.SUBMITTED)) {
+    if (
+      latestForm &&
+      (latestForm.status === EKYCStatus.DRAFT || latestForm.status === EKYCStatus.SUBMITTED)
+    ) {
       throw new Error('Form existed wait for processing');
     }
-  };
+  }
 }
 
-
+// With save draft form validator will not validate anything
 export class SaveDraftFormValidator extends StoreFormValidateTemplateAbs {
   protected formDataValidate(payload: EKYCFormData): void {
     console.log('Status is draft no need validate anything');
-  };
+  }
 }
 
+// With save draft form status is submitted and validate all required fields
 export class SubmitFormValidator extends StoreFormValidateTemplateAbs {
   protected formDataValidate(payload: EKYCFormData): void {
     if (!payload.fullName) {
@@ -72,10 +87,9 @@ export class SubmitFormValidator extends StoreFormValidateTemplateAbs {
       throw new Error('Status must be submitted');
     }
   }
-
 }
 
 export const validatorTemplateFactory = {
   [EKYCStatus.DRAFT]: new SaveDraftFormValidator(),
   [EKYCStatus.SUBMITTED]: new SubmitFormValidator(),
-}
+};

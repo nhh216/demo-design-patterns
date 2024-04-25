@@ -2,13 +2,22 @@ import {
   AggregateUserVerifiedObserver,
   IObserver, PushNotificationObserver,
   SendAuditLogObserver,
-} from '../observer/user-ekyc-update-status.observer';
+} from './user-ekyc-update-status.observer';
 import { EKYCStatus } from '../user-ekyc.type';
 import {
   IStoreDataObserver,
   PushNotificationObserverForStoreUseCase,
   SendAuditLogObserverForStoreUseCase,
-} from '../observer/user-ekyc-store.observer';
+} from './user-ekyc-store.observer';
+
+/**
+ * ---- Observer pattern
+ * Observer is a behavioral design pattern that lets you define a subscription mechanism to notify
+ * multiple objects about any events that happen to the object they’re observing.
+ * - Structure of Observer pattern:
+ * + Subject: knows its observers and notifies them automatically of any state changes, usually by calling one of their methods.
+ * + Observer: subscriber to the subject to for do something after any state change.
+ */
 
 /**
  * The Subject interface declares a set of methods for managing subscribers.
@@ -23,7 +32,7 @@ export interface IEKYCStatusSubject {
   // Notify all observers about an event.
   notify(): void;
 
-  changeStatus(userId: number, to: EKYCStatus): void;
+  stateUpdated(userId: number, to: EKYCStatus): void;
 }
 
 /**
@@ -83,7 +92,7 @@ export class UpdateStatusSubject implements IEKYCStatusSubject {
    * triggers a notification method whenever something important is about to
    * happen (or after it).
    */
-  public changeStatus(userId: number, updateStatusTo: EKYCStatus): void {
+  public stateUpdated(userId: number, updateStatusTo: EKYCStatus): void {
     this.userId = userId;
     this.updateStatusTo = updateStatusTo;
     console.log(`Subject: My state has just changed to: ${this.updateStatusTo}`);
@@ -91,6 +100,10 @@ export class UpdateStatusSubject implements IEKYCStatusSubject {
   }
 }
 
+/**
+ * This is observer subject for store data use-case
+ * After data committed form status change will notify to all observers
+ */
 export class StoreFormSubject implements IEKYCStatusSubject {
   /**
    * @type {number} For the sake of simplicity, the Subject's state, essential
@@ -134,7 +147,7 @@ export class StoreFormSubject implements IEKYCStatusSubject {
   public notify(): void {
     console.log('Subject: Notifying observers...');
     for (const observer of this.observers) {
-      observer.committed(this);
+      observer.afterCommitted(this);
     }
   }
 
@@ -144,7 +157,7 @@ export class StoreFormSubject implements IEKYCStatusSubject {
    * triggers a notification method whenever something important is about to
    * happen (or after it).
    */
-  public changeStatus(userId: number, updateStatusTo: EKYCStatus): void {
+  public stateUpdated(userId: number, updateStatusTo: EKYCStatus): void {
     this.userId = userId;
     this.updateStatusTo = updateStatusTo;
     console.log(`Subject: Stored form and status is: ${this.updateStatusTo}`);
@@ -173,20 +186,30 @@ export function updateStatusObserver(userId: number, status: EKYCStatus): void {
   subject.attach(aggregateVerifiedObserver);
 
 // Update status to subject
-  subject.changeStatus(userId, status);
+  subject.stateUpdated(userId, status);
 }
 
+
 export function storeDataObserver(userId: number, status: EKYCStatus): void {
-  // Int subject
+   /**
+   * Init StoreFormSubject subject
+   */
   const subject: IEKYCStatusSubject = new StoreFormSubject();
 
-// Int observers
+  /**
+   * Int observers related with store data use-case bz
+   */
   const sendAuditLogObserver = new SendAuditLogObserverForStoreUseCase();
   const pushNotificationObserver = new PushNotificationObserverForStoreUseCase();
 
-// Int Attach observers to subject
+  /**
+   * Attach observers to subject
+   */
   subject.attach(sendAuditLogObserver);
   subject.attach(pushNotificationObserver);
-// Update status to subject
-  subject.changeStatus(userId, status);
+
+  /**
+   * Trigger state updated and notify to all observers
+   */
+  subject.stateUpdated(userId, status);
 }

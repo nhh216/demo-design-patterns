@@ -1,14 +1,11 @@
-import {
-  UpdateStatusSubject,
-  IEKYCStatusSubject, StoreFormSubject,
-} from '../observer/user-ekyc-update-status.subject';
+import { IEKYCStatusSubject, StoreFormSubject } from './user-ekyc-update-status.subject';
 
 /**
  * The Observer interface declares the update method, used by subjects.
  */
 export interface IStoreDataObserver {
   // Receive update from subject.
-  committed(subject: IEKYCStatusSubject): void;
+  afterCommitted(subject: IEKYCStatusSubject): void;
 }
 
 /**
@@ -16,7 +13,7 @@ export interface IStoreDataObserver {
  * attached to.
  */
 export class SendAuditLogObserverForStoreUseCase implements IStoreDataObserver {
-  public committed(subject: IEKYCStatusSubject): void {
+  public afterCommitted(subject: IEKYCStatusSubject): void {
     if (subject instanceof StoreFormSubject) {
       console.log('-------------------- SendAuditLogObserverForStoreUseCase --------------------');
       console.log(`Store form for user_id: ${subject.userId} status: ${subject.updateStatusTo}`);
@@ -26,11 +23,12 @@ export class SendAuditLogObserverForStoreUseCase implements IStoreDataObserver {
 }
 
 export class PushNotificationObserverForStoreUseCase implements IStoreDataObserver {
-  public committed(subject: IEKYCStatusSubject): void {
+  public afterCommitted(subject: IEKYCStatusSubject): void {
     if (subject instanceof StoreFormSubject) {
       console.log('-------------------- PushNotificationObserverForStoreUseCase --------------------');
       console.log(`Store form for user_id: ${subject.userId} status : ${subject.updateStatusTo}`);
-      console.log('Push notification for user after store.');
+      console.log('Push notification for User after store.');
+      console.log('Push notification for Admin have new eKYC request.');
     }
   }
 }
